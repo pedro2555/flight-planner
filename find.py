@@ -2,6 +2,8 @@
 
 import geopy.distance
 
+NEIGHBOURS = {}
+
 class Node(object):
     def __init__(self, name, lat, lon, parent=None, cost=0.0):
         self.name = name
@@ -31,6 +33,9 @@ class Node(object):
 
     @property
     def neighbours(self):
+        if self.key in NEIGHBOURS:
+            return NEIGHBOURS[self.key]
+
         result = set()
         with open('ats.txt') as f:
             lines = f.readlines()
@@ -45,6 +50,8 @@ class Node(object):
                     float(lon), 
                     parent=self, 
                     cost=float(cost)))
+        
+        NEIGHBOURS[self.key] = result    
         return result
 
 def route(start, end):
