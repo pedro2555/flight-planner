@@ -1,5 +1,6 @@
 #!/bin/bash/python3
 
+import csv
 from collections import defaultdict
 import geopy.distance
 
@@ -56,13 +57,13 @@ class Node(object):
 
 ATS = defaultdict(list)
 with open('ats.txt') as f:
-    lines = f.readlines()
-    for line in lines:
-        t, line = line.split(',', 1)
+    reader = csv.reader(f, delimiter=',')
+    for line in reader:
+        t = line[0]
         if t == 'A':
-            airway, _ = line.split(',')
+            _, airway, _ = line
         elif t == 'S':
-            name, lat, lon, nname, nlat, nlon, _, _, ncost = line.split(',')
+            _, name, lat, lon, nname, nlat, nlon, _, _, ncost = line
             parent = Node(name, float(lat), float(lon))
             node = Node(
                     nname,
@@ -81,12 +82,12 @@ def route(start, end):
     while not current or current.key != end.key:
         queue = sorted(queue, key=lambda x: x.f_cost)
         current = queue.pop(0)
-        
+
         # pass only once per WPT
         if current.key in visited:
             continue
         visited.add(current.key)
-        
+
         for n in current.neighbours:
             n.h_cost = n.distance_to(end)
             if n.key not in visited:
