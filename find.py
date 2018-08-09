@@ -25,10 +25,10 @@ class Node(object):
                 '{:.5f}'.format(self.lat),
                 '{:.5f}'.format(self.lon)])
 
-    def to_str(self):
+    def __str__(self):
         if not self.parent:
             return self.name
-        return ' '.join([self.parent.to_str(), self.name])
+        return ' '.join([str(self.parent), self.name])
 
     def distance_to(self, node):
         return geopy.distance.vincenty(
@@ -89,8 +89,8 @@ UREDI = Node('UREDI', 39.85981, -6.39331)
 CASPE = Node('CASPE', 41.26845, 0.19939)
 TOSDI = Node('TOSDI', 40.99078, -6.28861)
 ROUTE = route(MANIK, ODEMI)
-print(ROUTE.to_str())
+print(ROUTE)
 ROUTE = route(UREDI, CASPE)
-print(ROUTE.to_str())
+print(ROUTE)
 ROUTE = route(TOSDI, UNOKO)
-print(ROUTE.to_str())
+print(ROUTE)
