@@ -35,10 +35,20 @@ class Node(object):
                 '{:.5f}'.format(self.lat),
                 '{:.5f}'.format(self.lon)])
 
-    def __str__(self):
+    def long_route(self):
         if not self.parent:
             return self.name
-        return ' '.join([str(self.parent), self.name])
+        return ' '.join([self.parent.long_route(), self.via, self.name])
+
+    def short_route(self, via=None):
+        if not self.parent:
+            return self.name
+
+        if not via or via != self.via:
+            return ' '.join([self.parent.short_route(via=self.via),
+                                                     self.via,
+                                                     self.name])
+        return self.parent.short_route(via=self.via)
 
     def distance_to(self, node):
         return geopy.distance.vincenty(
@@ -102,9 +112,7 @@ INBOM = Node('INBOM', 40.00192, -8.30201)
 UREDI = Node('UREDI', 39.85981, -6.39331)
 CASPE = Node('CASPE', 41.26845, 0.19939)
 TOSDI = Node('TOSDI', 40.99078, -6.28861)
-ROUTE = route(MANIK, ODEMI)
-print(ROUTE)
-ROUTE = route(UREDI, CASPE)
-print(ROUTE)
 ROUTE = route(TOSDI, UNOKO)
-print(ROUTE)
+print(ROUTE.long_route())
+print()
+print(ROUTE.short_route())
