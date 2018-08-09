@@ -1,18 +1,15 @@
 #!/bin/bash/python3
 
+from collections import defaultdict
 import geopy.distance
 
-with open('ats.txt') as f:
-    ATS = f.readlines()
-
-NEIGHBOURS = {}
-
 class Node(object):
-    def __init__(self, name, lat, lon, parent=None, g_cost=0.0):
+    def __init__(self, name, lat, lon, parent=None, cost=0.0, g_cost=0.0):
         self.name = name
         self.lat = lat
         self.lon = lon
         self.parent = parent
+        self.cost = cost # cost from parent node
         self.g_cost = g_cost # distance from starting node
         self.h_cost = 0.0 # distance to goal
 
@@ -41,23 +38,26 @@ class Node(object):
 
     @property
     def neighbours(self):
-        if self.key in NEIGHBOURS:
-            return NEIGHBOURS[self.key]
-
         result = set()
-        for neighbour in ATS:
-            if self.key not in neighbour:
-                continue
-            _, _, _, _, name, lat, lon, _, _, cost = neighbour.split(',')
-            result.add(Node(
-                    name, 
-                    float(lat), 
-                    float(lon), 
-                    parent=self, 
-                    g_cost=float(cost) + self.g_cost))
-        
-        NEIGHBOURS[self.key] = result    
+        for neighbour in ATS[self.key]:
+            neighbour.g_cost = neighbour.cost + self.g_cost
+            neighbour.parent = self
+            result.add(neighbour)
         return result
+
+ATS = defaultdict(list)
+with open('ats.txt') as f:
+    lines = f.readlines()
+    for line in lines:
+        if line[0:2] != 'S,':
+            continue
+        _, name, lat, lon, nname, nlat, nlon, _, _, ncost = line.split(',')
+        parent = Node(name, float(lat), float(lon))
+        ATS[parent.key].append(Node(
+                nname,
+                float(nlat),
+                float(nlon),
+                cost=float(ncost)))
 
 def route(start, end):
     print('finding route from %s to %s' % (start.name, end.name))
@@ -68,14 +68,16 @@ def route(start, end):
     while not current or current.key != end.key:
         queue = sorted(queue, key=lambda x: x.f_cost)
         current = queue.pop(0)
+        
+        # pass only once per WPT
         if current.key in visited:
             continue
         visited.add(current.key)
+        
         for n in current.neighbours:
             n.h_cost = n.distance_to(end)
             if n.key not in visited:
                 queue.append(n)
-        print(current.to_str())
     return current
 
 MANIK = Node('MANIK', 40.69185, -8.61617)
@@ -86,5 +88,9 @@ INBOM = Node('INBOM', 40.00192, -8.30201)
 UREDI = Node('UREDI', 39.85981, -6.39331)
 CASPE = Node('CASPE', 41.26845, 0.19939)
 TOSDI = Node('TOSDI', 40.99078, -6.28861)
+ROUTE = route(MANIK, ODEMI)
+print(ROUTE.to_str())
 ROUTE = route(UREDI, CASPE)
+print(ROUTE.to_str())
+ROUTE = route(TOSDI, UNOKO)
 print(ROUTE.to_str())
