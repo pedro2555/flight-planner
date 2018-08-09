@@ -2,6 +2,9 @@
 
 import geopy.distance
 
+with open('ats.txt') as f:
+    ATS = f.readlines()
+
 NEIGHBOURS = {}
 
 class Node(object):
@@ -37,12 +40,9 @@ class Node(object):
             return NEIGHBOURS[self.key]
 
         result = set()
-        with open('ats.txt') as f:
-            lines = f.readlines()
-            _neighbours = [l for l in lines
-                      if self.key in l]
-
-        for neighbour in _neighbours:
+        for neighbour in ATS:
+            if self.key not in neighbour:
+                continue
             _, _, _, _, name, lat, lon, _, _, cost = neighbour.split(',')
             result.add(Node(
                     name, 
@@ -80,5 +80,6 @@ UNOKO = Node('UNOKO', 50.45472, 7.22722)
 INBOM = Node('INBOM', 40.00192, -8.30201)
 UREDI = Node('UREDI', 39.85981, -6.39331)
 CASPE = Node('CASPE', 41.26845, 0.19939)
-ROUTE = route(UREDI, CASPE)
+TOSDI = Node('TOSDI', 40.99078, -6.28861)
+ROUTE = route(TOSDI, UNOKO)
 print(ROUTE.to_str())
