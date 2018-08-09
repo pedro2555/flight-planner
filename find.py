@@ -8,12 +8,17 @@ with open('ats.txt') as f:
 NEIGHBOURS = {}
 
 class Node(object):
-    def __init__(self, name, lat, lon, parent=None, cost=0.0):
+    def __init__(self, name, lat, lon, parent=None, g_cost=0.0):
         self.name = name
         self.lat = lat
         self.lon = lon
         self.parent = parent
-        self.cost = cost
+        self.g_cost = g_cost # distance from starting node
+        self.h_cost = 0.0 # distance to goal
+
+    @property
+    def f_cost(self):
+        return self.g_cost + self.h_cost
 
     @property
     def key(self):
@@ -49,7 +54,7 @@ class Node(object):
                     float(lat), 
                     float(lon), 
                     parent=self, 
-                    cost=float(cost)))
+                    g_cost=float(cost) + self.g_cost))
         
         NEIGHBOURS[self.key] = result    
         return result
@@ -61,16 +66,16 @@ def route(start, end):
     current = None
 
     while not current or current.key != end.key:
-        queue = sorted(queue, key=lambda x: x.cost)
+        queue = sorted(queue, key=lambda x: x.f_cost)
         current = queue.pop(0)
         if current.key in visited:
             continue
         visited.add(current.key)
         for n in current.neighbours:
-            n.cost += current.cost + n.distance_to(end)
+            n.h_cost = n.distance_to(end)
             if n.key not in visited:
                 queue.append(n)
-        print(current.name, current.cost)
+        print(current.to_str())
     return current
 
 MANIK = Node('MANIK', 40.69185, -8.61617)
@@ -81,5 +86,5 @@ INBOM = Node('INBOM', 40.00192, -8.30201)
 UREDI = Node('UREDI', 39.85981, -6.39331)
 CASPE = Node('CASPE', 41.26845, 0.19939)
 TOSDI = Node('TOSDI', 40.99078, -6.28861)
-ROUTE = route(TOSDI, UNOKO)
+ROUTE = route(UREDI, CASPE)
 print(ROUTE.to_str())
