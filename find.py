@@ -4,7 +4,15 @@ from collections import defaultdict
 import geopy.distance
 
 class Node(object):
-    def __init__(self, name, lat, lon, parent=None, cost=0.0, g_cost=0.0):
+    def __init__(
+            self,
+            name,
+            lat,
+            lon,
+            parent=None,
+            cost=0.0,
+            g_cost=0.0,
+            via='DCT'):
         self.name = name
         self.lat = lat
         self.lon = lon
@@ -12,6 +20,7 @@ class Node(object):
         self.cost = cost # cost from parent node
         self.g_cost = g_cost # distance from starting node
         self.h_cost = 0.0 # distance to goal
+        self.via = via
 
     @property
     def f_cost(self):
@@ -49,15 +58,19 @@ ATS = defaultdict(list)
 with open('ats.txt') as f:
     lines = f.readlines()
     for line in lines:
-        if line[0:2] != 'S,':
-            continue
-        _, name, lat, lon, nname, nlat, nlon, _, _, ncost = line.split(',')
-        parent = Node(name, float(lat), float(lon))
-        ATS[parent.key].append(Node(
-                nname,
-                float(nlat),
-                float(nlon),
-                cost=float(ncost)))
+        t, line = line.split(',', 1)
+        if t == 'A':
+            airway, _ = line.split(',')
+        elif t == 'S':
+            name, lat, lon, nname, nlat, nlon, _, _, ncost = line.split(',')
+            parent = Node(name, float(lat), float(lon))
+            node = Node(
+                    nname,
+                    float(nlat),
+                    float(nlon),
+                    cost=float(ncost),
+                    via=airway)
+            ATS[parent.key].append(node)
 
 def route(start, end):
     print('finding route from %s to %s' % (start.name, end.name))
