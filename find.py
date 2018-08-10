@@ -69,6 +69,8 @@ ATS = defaultdict(list)
 with open('ats.txt') as f:
     reader = csv.reader(f, delimiter=',')
     for line in reader:
+        if len(line) == 0:
+            continue
         t = line[0]
         if t == 'A':
             _, airway, _ = line
@@ -112,6 +114,8 @@ INBOM = Node('INBOM', 40.00192, -8.30201)
 UREDI = Node('UREDI', 39.85981, -6.39331)
 CASPE = Node('CASPE', 41.26845, 0.19939)
 TOSDI = Node('TOSDI', 40.99078, -6.28861)
+DEPUL = Node('DEPUL', 45.92500, 5.49444)
+NOSLI = Node('NOSLI', 59.07278, 17.25811)
 ROUTE = route(TOSDI, UNOKO)
 print(ROUTE.long_route())
 print()
