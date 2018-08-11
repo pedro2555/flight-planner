@@ -3,6 +3,7 @@
 import csv
 from collections import defaultdict
 import geopy.distance
+from os import listdir
 
 class Node(object):
     def __init__(
@@ -59,14 +60,49 @@ class Node(object):
     @property
     def neighbours(self):
         result = set()
-        for neighbour in ATS[self.key]:
+        for neighbour in WPTS[self.key]:
             neighbour.g_cost = neighbour.cost + self.g_cost
             neighbour.parent = self
             result.add(neighbour)
         return result
 
-ATS = defaultdict(list)
-with open('ats.txt') as f:
+WPTS = defaultdict(list)
+WPTS_NAMES = dict()
+for dct in listdir('navdata/DCTS'):
+    with open('/'.join(['navdata/DCTS', dct])) as f:
+        reader = f.readlines()
+        for line in reader:
+            if len(line) == 0:
+                continue
+
+            name = line[77:77 + 5].strip()
+            if name == '' or name[0:1].isdigit():
+                continue
+            lat = float('.'.join([line[26:26+3], line[26+3:26+9]]))
+            lon = float('.'.join([line[35:35+3], line[35+3:35+9]]))
+
+            nname = line[87:87 + 5].strip()
+            if nname == '' or nname[0:1].isdigit():
+                continue
+            nlat = float('.'.join([line[45:45+3], line[45+3:45+9]]))
+            nlon = float('.'.join([line[54:54+3], line[54+3:54+9]]))
+
+            parent = Node(name, float(lat), float(lon))
+            node = Node(
+                    nname,
+                    float(nlat),
+                    float(nlon),
+                    via='DCT')
+            node.cost = node.distance_to(parent)
+            parent.cost = node.cost
+
+            WPTS[parent.key].append(node)
+            WPTS[node.key].append(parent)
+
+            WPTS_NAMES[node.name] = node
+            WPTS_NAMES[parent.name] = parent
+
+with open('navdata/ats.txt') as f:
     reader = csv.reader(f, delimiter=',')
     for line in reader:
         if len(line) == 0:
@@ -77,13 +113,20 @@ with open('ats.txt') as f:
         elif t == 'S':
             _, name, lat, lon, nname, nlat, nlon, _, _, ncost = line
             parent = Node(name, float(lat), float(lon))
-            node = Node(
-                    nname,
-                    float(nlat),
-                    float(nlon),
-                    cost=float(ncost),
-                    via=airway)
-            ATS[parent.key].append(node)
+            node = Node(nname, float(nlat), float(nlon))
+
+            if (    parent.name in WPTS_NAMES and
+                    parent.distance_to(WPTS_NAMES[parent.name]) < 300):
+                parent = WPTS_NAMES[parent.name]
+
+            if (    node.name in WPTS_NAMES and
+                    node.distance_to(WPTS_NAMES[node.name]) < 300):
+                node = WPTS_NAMES[node.name]
+
+            node.cost = float(ncost)
+            node.via = airway
+
+            WPTS[parent.key].append(node)
 
 def route(start, end):
     print('finding route from %s to %s' % (start.name, end.name))
@@ -106,17 +149,11 @@ def route(start, end):
                 queue.append(n)
     return current
 
-MANIK = Node('MANIK', 40.69185, -8.61617)
-ODEMI = Node('ODEMI', 37.49751, -8.38401)
-TROIA = Node('TROIA', 38.07325, -8.87915)
-UNOKO = Node('UNOKO', 50.45472, 7.22722)
-INBOM = Node('INBOM', 40.00192, -8.30201)
-UREDI = Node('UREDI', 39.85981, -6.39331)
-CASPE = Node('CASPE', 41.26845, 0.19939)
-TOSDI = Node('TOSDI', 40.99078, -6.28861)
-DEPUL = Node('DEPUL', 45.92500, 5.49444)
-NOSLI = Node('NOSLI', 59.07278, 17.25811)
-ROUTE = route(TOSDI, UNOKO)
+IXIDA = Node('IXIDA', 39.654999, -0.80167)
+INBOM = Node('INBOM', 40.001944, -8.301944)
+UNOKO = Node('UNOKO', 50.454722, 7.227222)
+
+ROUTE = route(IXIDA, UNOKO)
 print(ROUTE.long_route())
 print()
 print(ROUTE.short_route())
