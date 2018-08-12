@@ -67,7 +67,6 @@ class Node(object):
         return result
 
 WPTS = defaultdict(list)
-WPTS_NAMES = dict()
 for dct in listdir('navdata/DCTS'):
     with open('/'.join(['navdata/DCTS', dct])) as f:
         reader = f.readlines()
@@ -99,9 +98,6 @@ for dct in listdir('navdata/DCTS'):
             WPTS[parent.key].append(node)
             WPTS[node.key].append(parent)
 
-            WPTS_NAMES[node.name] = node
-            WPTS_NAMES[parent.name] = parent
-
 with open('navdata/ats.txt') as f:
     reader = csv.reader(f, delimiter=',')
     for line in reader:
@@ -114,14 +110,6 @@ with open('navdata/ats.txt') as f:
             _, name, lat, lon, nname, nlat, nlon, _, _, ncost = line
             parent = Node(name, float(lat), float(lon))
             node = Node(nname, float(nlat), float(nlon))
-
-            if (    parent.name in WPTS_NAMES and
-                    parent.distance_to(WPTS_NAMES[parent.name]) < 300):
-                parent = WPTS_NAMES[parent.name]
-
-            if (    node.name in WPTS_NAMES and
-                    node.distance_to(WPTS_NAMES[node.name]) < 300):
-                node = WPTS_NAMES[node.name]
 
             node.cost = float(ncost)
             node.via = airway
