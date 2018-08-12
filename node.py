@@ -53,23 +53,8 @@ class Node(object):
         return ','.join([
                 'S',
                 self.name,
-                '{:.5f}'.format(self.lat),
-                '{:.5f}'.format(self.lon)])
-
-    def long_route(self):
-        if not self.parent:
-            return self.name
-        return ' '.join([self.parent.long_route(), self.via, self.name])
-
-    def short_route(self, via=None):
-        if not self.parent:
-            return self.name
-
-        if not via or via != self.via:
-            return ' '.join([self.parent.short_route(via=self.via),
-                                                     self.via,
-                                                     self.name])
-        return self.parent.short_route(via=self.via)
+                '{:.5f}'.format(self.location[0]),
+                '{:.5f}'.format(self.location[0])])
 
     def distance_to(self, node):
         return distance.vincenty(self.location, node.location).nm
