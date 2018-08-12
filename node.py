@@ -15,6 +15,7 @@ class Node(object):
         self.g_cost = 0.0
         self.h_cost = 0.0
         self.via = 'DCT'
+        self.neighbours = list()
 
         NODES[name].append(self)
 
@@ -84,5 +85,17 @@ with open('navdata/Navaids.txt') as f:
         if len(line) == 0:
             continue
         name, _,_,_,_,_, lat, lon, _, region, *_ = line
-        print(name, lat, lon, region)
         Node(name, lat, lon, region)
+with open('navdata/ats.txt') as f:
+    reader = csvreader(f, delimiter=',')
+    for line in reader:
+        if len(line) == 0:
+            continue
+        t, *_ = line
+        if t == 'A':
+            _, airway, _ = line
+        elif t == 'S':
+            _, name, lat, lon, nname, nlat, nlon, _, _, ncost = line
+            parent = Node.load(name, lat=lat, lon=lon)
+            node = Node.load(nname, lat=nlat, lon=nlon)
+            parent.neighbours.append((airway, float(ncost), node))
