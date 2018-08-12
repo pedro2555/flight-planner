@@ -78,3 +78,11 @@ with open('navdata/Waypoints.txt') as f:
         if len(line) == 0:
             continue
         Node(*line)
+with open('navdata/Navaids.txt') as f:
+    reader = csvreader(f, delimiter=',')
+    for line in reader:
+        if len(line) == 0:
+            continue
+        name, _,_,_,_,_, lat, lon, _, region, *_ = line
+        print(name, lat, lon, region)
+        Node(name, lat, lon, region)
