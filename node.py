@@ -3,6 +3,7 @@
 from collections import defaultdict
 from geopy import distance
 from csv import reader as csvreader
+from os import listdir
 
 NODES = defaultdict(list)
 
@@ -20,19 +21,19 @@ class Node(object):
         NODES[name].append(self)
 
     def load(name, *args, **kwargs):
-        if name not in NODES:
-            raise LookupError('%s did not match any node' % name)
-        
-        candidates = NODES[name]
-
-        if len(candidates) == 1:
-            return candidates[0]
-
         location = None
         if 'lat' in kwargs and 'lon' in kwargs:
             location = (float(kwargs['lat']), float(kwargs['lon']))
         if 'location' in kwargs:
             location = kwargs['location']
+
+        if name not in NODES:
+            NODES[name].append(Node(name, lat, lon, ''))
+        
+        candidates = NODES[name]
+
+        if len(candidates) == 1:
+            return candidates[0]
 
         if not location:
             raise LookupError('Multiple matches for %s' % name)
@@ -99,3 +100,28 @@ with open('navdata/ats.txt') as f:
             parent = Node.load(name, lat=lat, lon=lon)
             node = Node.load(nname, lat=nlat, lon=nlon)
             parent.neighbours.append((airway, float(ncost), node))
+for dct in listdir('navdata/DCTS'):
+    with open('/'.join(['navdata/DCTS', dct])) as f:
+        reader = f.readlines()
+        for line in reader:
+            if len(line) == 0:
+                continue
+
+            name = line[77:77 + 5].strip()
+            if name == '' or name[0:1].isdigit():
+                continue
+            lat = float('.'.join([line[26:26+3], line[26+3:26+9]]))
+            lon = float('.'.join([line[35:35+3], line[35+3:35+9]]))
+
+            nname = line[87:87 + 5].strip()
+            if nname == '' or nname[0:1].isdigit():
+                continue
+            nlat = float('.'.join([line[45:45+3], line[45+3:45+9]]))
+            nlon = float('.'.join([line[54:54+3], line[54+3:54+9]]))
+
+            parent = Node.load(name, lat=lat, lon=lon)
+            node = Node.load(nname, lat=nlat, lon=nlon)
+
+            cost = node.distance_to(parent)
+            parent.neighbours.append(('DCT', cost, node))
+            node.neighbours.append(('DCT', cost, parent))
